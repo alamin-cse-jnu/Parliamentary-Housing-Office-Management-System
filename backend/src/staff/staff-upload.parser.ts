@@ -39,6 +39,13 @@ const MARITAL_MAP: Record<string, string> = {
   "widowed": "WIDOWED",   "বিধবা": "WIDOWED", "বিপত্নীক": "WIDOWED",
 };
 
+const BN_DIGITS: Record<string, string> = {
+  "০":"0","১":"1","২":"2","৩":"3","৪":"4","৫":"5","৬":"6","৭":"7","৮":"8","৯":"9",
+};
+function normDigits(s: string): string {
+  return s.replace(/[০-৯]/g, (c) => BN_DIGITS[c] ?? c);
+}
+
 function resolve(row: Record<string, any>, aliases: string[]): string {
   for (const alias of aliases) {
     const val = row[alias];
@@ -50,7 +57,7 @@ function resolve(row: Record<string, any>, aliases: string[]): string {
 }
 
 function parseGrade(raw: string): number | null {
-  const cleaned = raw.replace(/[^\d]/g, "").trim();
+  const cleaned = normDigits(raw).replace(/[^\d]/g, "").trim();
   const n = parseInt(cleaned);
   return !isNaN(n) && n >= 1 && n <= 20 ? n : null;
 }
@@ -62,7 +69,8 @@ export interface ParsedStaffRow {
   mobile: string;
   employee_class: string;
   grade: number;
-  department: string;
+  department_en: string;
+  department_bn: string;
   designation: string;
   gender: string;
   marital_status: string;
@@ -95,6 +103,9 @@ export function parseStaffExcel(buffer: Buffer): StaffParseResult {
   const headers = allRows[headerIdx].map((h: any) => String(h).trim());
   const dataRows = allRows.slice(headerIdx + 1);
 
+  // Detect file language: English file has "Office" or "Employee Name (English)" columns
+  const isEnglishFile = headers.some(h => h === "Office" || h === "Employee Name (English)" || h === "Employee Name(English)");
+
   const valid: ParsedStaffRow[] = [];
   const errors: { row: number; data: any; reason: string }[] = [];
   const seenIds = new Set<string>();
@@ -106,22 +117,24 @@ export function parseStaffExcel(buffer: Buffer): StaffParseResult {
     const row: Record<string, any> = {};
     headers.forEach((h, i) => { row[h] = rawRow[i]; });
 
-    const internal_user_id = resolve(row, COL.internal_user_id);
+    const internal_user_id = normDigits(resolve(row, COL.internal_user_id));
     const name_en          = resolve(row, COL.name_en);
     const name_bn          = resolve(row, COL.name_bn);
-    const mobile           = resolve(row, COL.mobile);
+    const mobile           = normDigits(resolve(row, COL.mobile));
     const rawClass         = resolve(row, COL.employee_class);
     const rawGrade         = resolve(row, COL.grade);
-    const department       = resolve(row, COL.department);
+    const deptValue        = resolve(row, COL.department);
+    const department_en    = isEnglishFile ? deptValue : "";
+    const department_bn    = isEnglishFile ? "" : deptValue;
     const designation      = resolve(row, COL.designation);
     const rawGender        = resolve(row, COL.gender);
     const rawMarital       = resolve(row, COL.marital_status);
 
     const missing: string[] = [];
-    if (!internal_user_id)        missing.push("internal_user_id");
-    if (!name_en && !name_bn)     missing.push("name (en or bn)");
-    if (!department)              missing.push("department");
-    if (!designation)             missing.push("designation");
+    if (!internal_user_id)              missing.push("internal_user_id");
+    if (!name_en && !name_bn)           missing.push("name (en or bn)");
+    if (!department_en && !department_bn) missing.push("department");
+    if (!designation)                   missing.push("designation");
 
     if (missing.length > 0) {
       errors.push({ row: excelRowNum, data: row, reason: `Missing required fields: ${missing.join(", ")}` });
@@ -146,7 +159,7 @@ export function parseStaffExcel(buffer: Buffer): StaffParseResult {
 
     valid.push({
       internal_user_id, name_en, name_bn, mobile,
-      employee_class, grade, department, designation,
+      employee_class, grade, department_en, department_bn, designation,
       gender, marital_status,
     });
   });

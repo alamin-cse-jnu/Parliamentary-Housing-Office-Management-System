@@ -45,7 +45,7 @@ interface Mp {
 interface ParsedRow {
   parliament_number: string; internal_user_id: string;
   name_en: string; name_bn: string; constituency: string;
-  party: string; status: string; gender: string;
+  party_en: string; party_bn: string; status: string; gender: string;
 }
 interface ErrorRow { row: number; data: any; reason: string }
 interface PreviewResult { valid_count: number; error_count: number; valid_rows: ParsedRow[]; error_rows: ErrorRow[] }
@@ -243,12 +243,16 @@ export function MpsPage() {
       const errors: ErrorRow[] = [];
       for (const result of results) {
         for (const row of result.valid_rows) {
-          const existing = map.get(row.parliament_number);
+          const key = row.internal_user_id; // merge by internal_user_id (normalised in backend)
+          const existing = map.get(key);
           if (existing) {
             if (!existing.name_en && row.name_en) existing.name_en = row.name_en;
             if (!existing.name_bn && row.name_bn) existing.name_bn = row.name_bn;
+            if (!existing.constituency && row.constituency) existing.constituency = row.constituency;
+            if (!existing.party_en && row.party_en) existing.party_en = row.party_en;
+            if (!existing.party_bn && row.party_bn) existing.party_bn = row.party_bn;
           } else {
-            map.set(row.parliament_number, { ...row });
+            map.set(key, { ...row });
           }
         }
         errors.push(...result.error_rows);
@@ -323,12 +327,6 @@ export function MpsPage() {
       ),
     },
     {
-      title: "MP No.",
-      dataIndex: "parliament_number",
-      width: 90,
-      render: (v: string) => <Text code style={{ fontSize: 12 }}>{v}</Text>,
-    },
-    {
       title: t("name_en") + " / " + t("name_bn"),
       key: "name",
       render: (_: unknown, row: Mp) => (
@@ -361,12 +359,15 @@ export function MpsPage() {
   ];
 
   const previewValidCols: ColumnsType<ParsedRow> = [
-    { title: t("parliament_number"), dataIndex: "parliament_number", width: 110 },
-    { title: t("internal_user_id"), dataIndex: "internal_user_id", width: 100 },
+    { title: t("internal_user_id"), dataIndex: "internal_user_id", width: 110 },
     { title: t("name_en"), dataIndex: "name_en" },
     { title: t("name_bn"), dataIndex: "name_bn" },
     { title: t("constituency"), dataIndex: "constituency" },
-    { title: t("party"), dataIndex: "party" },
+    {
+      title: t("party"),
+      key: "party",
+      render: (_: unknown, r: ParsedRow) => r.party_bn || r.party_en || "—",
+    },
     { title: t("status"), dataIndex: "status", width: 90 },
   ];
 

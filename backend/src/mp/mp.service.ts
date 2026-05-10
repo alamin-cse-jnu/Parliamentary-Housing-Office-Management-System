@@ -156,18 +156,41 @@ export class MpService {
 
     for (const row of dto.rows) {
       try {
-        // Upsert party
-        let party = await this.prisma.politicalParty.findFirst({
-          where: { OR: [{ name_en: row.party }, { name_bn: row.party }] },
-        });
+        // Bilingual party upsert: find by either name, then update with both if available
+        const party_en = row.party_en || "";
+        const party_bn = row.party_bn || "";
+        const partySearch = [
+          ...(party_en ? [{ name_en: party_en }] : []),
+          ...(party_bn ? [{ name_bn: party_bn }] : []),
+        ];
+        let party = partySearch.length
+          ? await this.prisma.politicalParty.findFirst({ where: { OR: partySearch } })
+          : null;
         if (!party) {
           party = await this.prisma.politicalParty.create({
-            data: { name_en: row.party, name_bn: row.party },
+            data: {
+              name_en: party_en || party_bn,
+              name_bn: party_bn || party_en,
+            },
           });
+        } else {
+          // Update with better bilingual data if we have new info
+          const needsUpdate =
+            (party_en && party.name_en !== party_en) ||
+            (party_bn && party.name_bn !== party_bn);
+          if (needsUpdate) {
+            party = await this.prisma.politicalParty.update({
+              where: { id: party.id },
+              data: {
+                ...(party_en && { name_en: party_en }),
+                ...(party_bn && { name_bn: party_bn }),
+              },
+            });
+          }
         }
 
         await this.prisma.mp.upsert({
-          where: { parliament_number: row.parliament_number },
+          where: { internal_user_id: row.internal_user_id },
           update: {
             ...(row.name_en && { name_en: row.name_en }),
             ...(row.name_bn && { name_bn: row.name_bn }),
@@ -175,7 +198,7 @@ export class MpService {
             party_id: party.id,
             status: (row.status as any) ?? "ACTIVE",
             gender: (row.gender as any) ?? "MALE",
-            internal_user_id: row.internal_user_id,
+            parliament_number: row.parliament_number,
           },
           create: {
             parliament_number: row.parliament_number,

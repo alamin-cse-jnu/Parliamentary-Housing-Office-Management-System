@@ -45,7 +45,8 @@ interface ParsedRow {
   mobile: string;
   employee_class: string;
   grade: number;
-  department: string;
+  department_en: string;
+  department_bn: string;
   designation: string;
   gender: string;
   marital_status: string;
@@ -272,6 +273,9 @@ export function StaffPage() {
           if (existing) {
             if (!existing.name_en && row.name_en) existing.name_en = row.name_en;
             if (!existing.name_bn && row.name_bn) existing.name_bn = row.name_bn;
+            if (!existing.designation && row.designation) existing.designation = row.designation;
+            if (!existing.department_en && row.department_en) existing.department_en = row.department_en;
+            if (!existing.department_bn && row.department_bn) existing.department_bn = row.department_bn;
           } else {
             map.set(row.internal_user_id, { ...row });
           }
@@ -397,7 +401,11 @@ export function StaffPage() {
     { title: t("name_en"), dataIndex: "name_en" },
     { title: t("name_bn"), dataIndex: "name_bn" },
     { title: t("designation"), dataIndex: "designation" },
-    { title: t("department"), dataIndex: "department" },
+    {
+      title: t("department"),
+      key: "department",
+      render: (_: unknown, r: ParsedRow) => r.department_bn || r.department_en || "—",
+    },
     { title: t("grade"), dataIndex: "grade", width: 70 },
     { title: t("employee_class"), dataIndex: "employee_class", width: 100 },
   ];

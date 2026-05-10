@@ -156,14 +156,36 @@ export class StaffService {
 
     for (const [i, row] of dto.rows.entries()) {
       try {
-        // Upsert department
-        let dept = await this.prisma.department.findFirst({
-          where: { OR: [{ name_en: row.department }, { name_bn: row.department }] },
-        });
+        // Bilingual department upsert: find by either name, then update with both if available
+        const dept_en = row.department_en || "";
+        const dept_bn = row.department_bn || "";
+        const deptSearch = [
+          ...(dept_en ? [{ name_en: dept_en }] : []),
+          ...(dept_bn ? [{ name_bn: dept_bn }] : []),
+        ];
+        let dept = deptSearch.length
+          ? await this.prisma.department.findFirst({ where: { OR: deptSearch } })
+          : null;
         if (!dept) {
           dept = await this.prisma.department.create({
-            data: { name_en: row.department, name_bn: row.department },
+            data: {
+              name_en: dept_en || dept_bn,
+              name_bn: dept_bn || dept_en,
+            },
           });
+        } else {
+          const needsUpdate =
+            (dept_en && dept.name_en !== dept_en) ||
+            (dept_bn && dept.name_bn !== dept_bn);
+          if (needsUpdate) {
+            dept = await this.prisma.department.update({
+              where: { id: dept.id },
+              data: {
+                ...(dept_en && { name_en: dept_en }),
+                ...(dept_bn && { name_bn: dept_bn }),
+              },
+            });
+          }
         }
 
         const existing = await this.prisma.staff.findUnique({

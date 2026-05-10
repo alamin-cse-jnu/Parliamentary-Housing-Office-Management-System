@@ -14,6 +14,7 @@ const { Title, Text } = Typography;
 interface Tenure {
   id: number;
   name: string;
+  name_bn: string | null;
   start_date: string;
   end_date: string | null;
   status: string;
@@ -56,6 +57,7 @@ export function TenurePage() {
     setEditing(row);
     form.setFieldsValue({
       name: row.name,
+      name_bn: row.name_bn ?? "",
       start_date: dayjs(row.start_date),
       end_date: row.end_date ? dayjs(row.end_date) : null,
     });
@@ -89,6 +91,7 @@ export function TenurePage() {
   const columns: ColumnsType<Tenure> = [
     { title: "ID", dataIndex: "id", width: 60 },
     { title: t("name_en"), dataIndex: "name", render: (v: string) => <Text strong>{v}</Text> },
+    { title: t("name_bn"), dataIndex: "name_bn", render: (v: string | null) => v || <Text type="secondary">—</Text> },
     {
       title: t("start_date"),
       dataIndex: "start_date",
@@ -157,6 +160,9 @@ export function TenurePage() {
         <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
           <Form.Item name="name" label={t("name_en")} rules={[{ required: true, message: t("val_required") }]}>
             <Input placeholder="e.g. 13th Parliament" />
+          </Form.Item>
+          <Form.Item name="name_bn" label={t("name_bn")}>
+            <Input placeholder="যেমন: ১৩তম সংসদ" />
           </Form.Item>
           <Form.Item name="start_date" label={t("start_date")} rules={[{ required: true, message: t("val_required") }]}>
             <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" />

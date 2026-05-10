@@ -39,7 +39,17 @@
       "PowerShell($loginResp = Invoke-RestMethod -Uri \"http://localhost:3000/api/auth/login\" -Method POST -ContentType \"application/json\" -Body '{\"username\":\"superadmin\",\"password\":\"Admin@1234\"}'; $token = $loginResp.access_token; try { $r = Invoke-WebRequest -Uri \"http://localhost:3000/api/reports/r10?format=pdf&lang=en\" -Headers @{Authorization=\"Bearer $token\"} -Method GET -ErrorAction Stop; Write-Output \"OK $\\($r.StatusCode\\) ContentType=$\\($r.Headers['Content-Type']\\) Bytes=$\\($r.Content.Length\\)\" } catch [System.Net.WebException] { $resp = $_.Exception.Response; $sr = New-Object System.IO.StreamReader\\($resp.GetResponseStream\\(\\)\\); Write-Output \"HTTP $\\($resp.StatusCode.value__\\): $\\($sr.ReadToEnd\\(\\)\\)\" })",
       "PowerShell(Get-Item *)",
       "Bash(docker run *)",
-      "Bash(curl -s -X POST http://localhost:3000/api/auth/login -H 'Content-Type: application/json' -d '{\"username\":\"superadmin\",\"password\":\"Admin@1234\"}')"
+      "Bash(curl -s -X POST http://localhost:3000/api/auth/login -H 'Content-Type: application/json' -d '{\"username\":\"superadmin\",\"password\":\"Admin@1234\"}')",
+      "Bash(docker exec parliament_backend *)",
+      "Bash(python -c ' *)",
+      "Bash(python3 -c ' *)",
+      "Bash(python3 *)",
+      "Bash(set DATABASE_URL=postgresql://parliament:parliament_pass@localhost:5432/parliament_alloc)",
+      "Bash(docker cp *)",
+      "Bash(Remove-Item \"D:\\\\Development\\\\projects\\\\office_and_house_allocation\\\\docs\\\\fix_parties.py\" -Force)",
+      "Bash(Remove-Item \"D:\\\\Development\\\\projects\\\\office_and_house_allocation\\\\docs\\\\fix_parties.sql\" -Force)",
+      "Bash(Remove-Item \"D:\\\\Development\\\\projects\\\\office_and_house_allocation\\\\docs\\\\fix_parties_apply.py\" -Force)",
+      "Bash(Remove-Item \"D:\\\\Development\\\\projects\\\\office_and_house_allocation\\\\docs\\\\fix_mp_parties.py\" -Force)"
     ]
   }
 }

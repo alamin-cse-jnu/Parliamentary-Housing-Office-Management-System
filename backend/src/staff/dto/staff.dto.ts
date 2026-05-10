@@ -44,7 +44,8 @@ export class StaffRowDto {
   @IsString() @IsOptional() mobile?: string;
   @IsString() @IsOptional() employee_class?: string;
   @IsInt()    @IsOptional() grade?: number;
-  @IsString() @IsNotEmpty() department: string;
+  @IsString() @IsOptional() department_en?: string;
+  @IsString() @IsOptional() department_bn?: string;
   @IsString() @IsNotEmpty() designation: string;
   @IsString() @IsOptional() gender?: string;
   @IsString() @IsOptional() marital_status?: string;

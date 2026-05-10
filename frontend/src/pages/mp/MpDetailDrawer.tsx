@@ -202,7 +202,6 @@ export function MpDetailDrawer({ mpId, open, onClose, onEdit }: Props) {
               label: "Profile",
               children: (
                 <Descriptions bordered size="small" column={1} labelStyle={{ width: 160 }}>
-                  <Descriptions.Item label="Parliament #">{mp.parliament_number || "—"}</Descriptions.Item>
                   <Descriptions.Item label="User ID">{mp.internal_user_id || "—"}</Descriptions.Item>
                   <Descriptions.Item label="Name (English)">{mp.name_en}</Descriptions.Item>
                   <Descriptions.Item label="নাম (বাংলা)">{mp.name_bn}</Descriptions.Item>

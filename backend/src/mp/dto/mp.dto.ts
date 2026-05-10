@@ -44,7 +44,8 @@ export class MpRowDto {
   @IsString() @IsOptional() name_en?: string;
   @IsString() @IsOptional() name_bn?: string;
   @IsString() @IsNotEmpty() constituency: string;
-  @IsString() @IsNotEmpty() party: string;
+  @IsString() @IsOptional() party_en?: string;
+  @IsString() @IsOptional() party_bn?: string;
   @IsString() @IsOptional() status?: string;
   @IsString() @IsOptional() gender?: string;
 }

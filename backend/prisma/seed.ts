@@ -47,6 +47,8 @@ async function main() {
     },
   });
 
+  await prisma.$executeRaw`SELECT setval('parliament_tenures_id_seq', (SELECT MAX(id) FROM parliament_tenures))`;
+
   // MP Designations
   const mpDesignations = [
     { name_bn: "সংসদ সদস্য", name_en: "Member of Parliament", sort_order: 1 },
@@ -68,6 +70,8 @@ async function main() {
     });
   }
 
+  await prisma.$executeRaw`SELECT setval('mp_designations_id_seq', (SELECT MAX(id) FROM mp_designations))`;
+
   // Household Relation Types
   const relations = [
     { name_bn: "স্বামী/স্ত্রী", name_en: "Spouse", sort_order: 1 },
@@ -87,6 +91,8 @@ async function main() {
     });
   }
 
+  await prisma.$executeRaw`SELECT setval('household_relation_types_id_seq', (SELECT MAX(id) FROM household_relation_types))`;
+
   // MP Flat Categories
   const flatCategories = [
     { name_bn: "এন.এ.সি.", name_en: "N.A.C.", sort_order: 1 },
@@ -103,6 +109,8 @@ async function main() {
     });
   }
 
+  await prisma.$executeRaw`SELECT setval('mp_flat_categories_id_seq', (SELECT MAX(id) FROM mp_flat_categories))`;
+
   // Staff Quarter Categories (examples — admin can add more)
   const quarterCategories = [
     { name_bn: "এ টাইপ", name_en: "Type A", sort_order: 1 },
@@ -117,6 +125,8 @@ async function main() {
       create: { ...c, id: quarterCategories.indexOf(c) + 1 },
     });
   }
+
+  await prisma.$executeRaw`SELECT setval('staff_quarter_categories_id_seq', (SELECT MAX(id) FROM staff_quarter_categories))`;
 
   console.log("Seed complete.");
 }

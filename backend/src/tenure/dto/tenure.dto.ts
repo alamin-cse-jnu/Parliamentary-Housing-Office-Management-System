@@ -5,6 +5,10 @@ export class CreateTenureDto {
   @IsNotEmpty()
   name: string;
 
+  @IsString()
+  @IsOptional()
+  name_bn?: string;
+
   @IsDateString()
   start_date: string;
 }
@@ -13,6 +17,10 @@ export class UpdateTenureDto {
   @IsString()
   @IsOptional()
   name?: string;
+
+  @IsString()
+  @IsOptional()
+  name_bn?: string;
 
   @IsDateString()
   @IsOptional()

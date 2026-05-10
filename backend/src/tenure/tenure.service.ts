@@ -26,6 +26,7 @@ export class TenureService {
     return this.prisma.parliamentTenure.create({
       data: {
         name: dto.name,
+        name_bn: dto.name_bn ?? null,
         start_date: new Date(dto.start_date),
         created_by: userId,
       },
@@ -38,6 +39,7 @@ export class TenureService {
       where: { id },
       data: {
         ...(dto.name && { name: dto.name }),
+        ...(dto.name_bn !== undefined && { name_bn: dto.name_bn }),
         ...(dto.end_date && { end_date: new Date(dto.end_date) }),
         ...(dto.is_active !== undefined && { is_active: dto.is_active }),
       },

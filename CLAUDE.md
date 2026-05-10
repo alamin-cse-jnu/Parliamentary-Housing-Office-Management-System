@@ -377,41 +377,53 @@ History preserved via:
 > **UPDATE THIS SECTION before ending every session**
 
 ```
-Last Updated     : 10 May, 2026
-Last Worked On   : Detail view drawers for all entities (MP, Staff, Quarters, Flats, Offices)
+Last Updated     : 11 May, 2026
+Last Worked On   : Bilingual fixes — Parliament Tenure Bangla name, bilingual party/department upload pipeline
 
 File Last Edited :
-  backend/src/allocation/allocation.service.ts          ← Added getAllHistoryForMp() + getAllHistoryForStaff()
-  backend/src/allocation/allocation.controller.ts       ← Added GET /allocations/mp/:id/history + staff/:id/history
-  frontend/src/pages/mp/MpDetailDrawer.tsx              ← NEW: MP detail drawer (Profile / Designation History / Allocation History)
-  frontend/src/pages/mp/MpsPage.tsx                     ← Added MpDetailDrawer + onRow click handler
-  frontend/src/pages/staff/StaffDetailDrawer.tsx        ← NEW: Staff detail drawer (Profile / Designation History / Quarter History / Household Members)
-  frontend/src/pages/staff/StaffPage.tsx                ← Added StaffDetailDrawer + onRow click handler
-  frontend/src/pages/quarter/QuartersPage.tsx           ← Added inline Quarter detail drawer with allocation history
-  frontend/src/pages/office/OfficesPage.tsx             ← Added inline Office detail drawer with allocation history
-  frontend/src/pages/flat/FlatsPage.tsx                 ← Added inline Flat detail drawer with allocation history
+  backend/prisma/schema.prisma                              ← Added name_bn to ParliamentTenure
+  backend/prisma/migrations/20260510181345_add_tenure_name_bn/ ← New migration for tenure name_bn
+  backend/src/tenure/dto/tenure.dto.ts                      ← Added name_bn to Create/UpdateTenureDto
+  backend/src/tenure/tenure.service.ts                      ← Added name_bn to create/update
+  backend/src/mp/mp-upload.parser.ts                        ← Split party → party_en + party_bn (file language detection)
+  backend/src/mp/dto/mp.dto.ts                              ← MpRowDto: party → party_en + party_bn
+  backend/src/mp/mp.service.ts                              ← Bilingual party upsert (find + update or create)
+  backend/src/staff/staff-upload.parser.ts                  ← Split department → department_en + department_bn
+  backend/src/staff/dto/staff.dto.ts                        ← StaffRowDto: department → department_en + department_bn
+  backend/src/staff/staff.service.ts                        ← Bilingual department upsert
+  backend/prisma/seed.ts                                    ← Added setval() calls after explicit-ID inserts
+  backend/prisma/seed-demo.ts                               ← Added setval() calls after explicit-ID inserts
+  frontend/src/pages/tenure/TenurePage.tsx                  ← Added name_bn field to form and table
+  frontend/src/pages/mp/MpsPage.tsx                         ← ParsedRow: party → party_en + party_bn; merge fix
+  frontend/src/pages/staff/StaffPage.tsx                    ← ParsedRow: department → department_en + department_bn; merge fix
 
 Key Features Added This Session:
-  1. MP Detail Drawer — click any MP row to open side panel with:
-     - Profile tab: all MP fields + current designation
-     - Designation History tab: table of all designation changes with dates
-     - Allocation History tab: all offices/flats assigned (active + past) with dates
-  2. Staff Detail Drawer — click any staff row:
-     - Profile tab: all staff fields
-     - Designation History tab: all designation changes
-     - Quarter History tab: all quarter allocations (active + past) with dates
-     - Household Members tab: manage family members (add/edit/remove/photo) — previously only in AllocationsPage
-  3. Quarter Detail Drawer — click any quarter row:
-     - Full quarter info (address, category, status, current occupant)
-     - Allocation history table (who lived there + dates)
-  4. MP Office Drawer — same pattern for offices
-  5. MP Flat Drawer — same pattern for flats
-  All drawers have Edit button in header that opens the existing edit modal.
+  1. Parliament Tenure bilingual — form now has English name + Bangla name fields
+  2. Political Parties bilingual — MP upload parser detects file language (English/Bangla)
+     and stores party_en from English file, party_bn from Bangla file separately.
+     On re-import, existing parties are updated with the missing language name.
+  3. Departments bilingual — same pattern: "Office" column (English Excel) → name_en,
+     "বিভাগ" column (Bangla Excel) → name_bn.
+  4. Fixed all DB sequence mismatches (seed used explicit IDs; sequences not advanced).
+     Auto-fix applied at startup of seed scripts via setval().
+  5. Fixed 4 failed MP rows (013000101-013000401) — caused by sequence collision.
+     Inserted them directly + fixed root cause in seed.
+  6. Restored 245 MPs with NULL party_id back to BNP (party_id=2) using Excel data.
 
-Backend API Notes:
-  - GET /allocations/mp/:mpId/history — returns ALL allocations for an MP (active + vacated)
-  - GET /allocations/staff/:staffId/history — returns ALL allocations for a staff (active + vacated)
-  - These are NEW endpoints; existing /allocations/mp/:mpId and /staff/:staffId still return only active
+Data Notes:
+  - Political parties in DB are now fully bilingual (ids 2, 3, 4, 6-14)
+  - All 348 MPs imported successfully; party distribution: BNP=246, Jamaat=77, Independent=8,
+    NCP=8, and 5 smaller parties with 1-3 MPs each
+  - Departments (ids 6-97) from staff import currently have Bangla name as name_en.
+    Admin should re-upload both Bangla + English staff Excel to populate English dept names.
+  - Re-uploading MP Excel (both files) will update party bilingual data automatically.
+
+Stopped Because  : All 3 bilingual issues fixed
+Next Step        :
+  - Admin should re-upload staff Excel (Bangla + English) to populate English department names
+  - Admin should re-upload MP Excel (Bangla + English) to confirm bilingual party names
+  - QA testing: all 10 reports, duplicate allocation prevention, photo upload
+  - Input validation audit on all API endpoints
 
 Stopped Because  : All planned features complete
 Next Step        :

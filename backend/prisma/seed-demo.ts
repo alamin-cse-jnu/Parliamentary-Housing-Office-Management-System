@@ -29,6 +29,7 @@ async function main() {
     }),
   ]);
   console.log(`  Buildings: ${buildings.length}`);
+  await prisma.$executeRaw`SELECT setval('mp_office_buildings_id_seq', (SELECT MAX(id) FROM mp_office_buildings))`;
 
   // ── 2. Political Parties ────────────────────────────────────────────────────
   const parties = await Promise.all([
@@ -38,6 +39,7 @@ async function main() {
     prisma.politicalParty.upsert({ where: { id: 4 }, update: {}, create: { id: 4, name_bn: "স্বতন্ত্র", name_en: "Independent" } }),
   ]);
   console.log(`  Parties: ${parties.length}`);
+  await prisma.$executeRaw`SELECT setval('political_parties_id_seq', (SELECT MAX(id) FROM political_parties))`;
 
   // ── 3. Departments ──────────────────────────────────────────────────────────
   const depts = await Promise.all([
@@ -48,6 +50,7 @@ async function main() {
     prisma.department.upsert({ where: { id: 5 }, update: {}, create: { id: 5, name_bn: "নিরাপত্তা অধিশাখা", name_en: "Security Branch" } }),
   ]);
   console.log(`  Departments: ${depts.length}`);
+  await prisma.$executeRaw`SELECT setval('departments_id_seq', (SELECT MAX(id) FROM departments))`;
 
   // ── 4. MPs (10 sample) ──────────────────────────────────────────────────────
   const mpData = [

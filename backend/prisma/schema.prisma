@@ -210,6 +210,7 @@ model HouseholdRelationType {
 model ParliamentTenure {
   id         Int       @id @default(autoincrement())
   name       String
+  name_bn    String?
   start_date DateTime  @db.Date
   end_date   DateTime? @db.Date
   is_active  Boolean   @default(true)

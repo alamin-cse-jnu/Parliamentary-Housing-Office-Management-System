@@ -1,0 +1,29 @@
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&family=Roboto:wght@400;500;700&display=swap");
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Noto Sans Bengali", "Roboto", -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #f0f2f5;
+  color: #222;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* Ant Design layout overrides */
+.ant-layout-sider .ant-menu-dark {
+  background: transparent;
+}
+
+.ant-menu-dark .ant-menu-item-selected {
+  background-color: #163d73 !important;
+}
+
+.ant-menu-dark .ant-menu-item:hover {
+  background-color: rgba(255,255,255,0.08) !important;
+}

@@ -1,0 +1,458 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── ENUMS ───────────────────────────────────────────────────────────────────
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum MaritalStatus {
+  SINGLE
+  MARRIED
+  DIVORCED
+  WIDOWED
+}
+
+enum EmployeeClass {
+  CLASS_1
+  CLASS_2
+  CLASS_3
+  CLASS_4
+  NO_CLASS
+}
+
+enum MpStatus {
+  ACTIVE
+  RESIGNED
+  DECEASED
+  SEAT_VACANT
+}
+
+enum StaffStatus {
+  ACTIVE
+  RETIRED
+  TRANSFERRED
+  DECEASED
+}
+
+enum AssetStatus {
+  VACANT
+  OCCUPIED
+  UNDER_MAINTENANCE
+}
+
+enum AllocationType {
+  OFFICE
+  MP_FLAT
+  STAFF_QUARTER
+}
+
+enum OccupantType {
+  MP
+  STAFF
+}
+
+enum AllocationStatus {
+  ACTIVE
+  VACATED
+}
+
+enum AuditAction {
+  INSERT
+  UPDATE
+  DELETE
+}
+
+// ─── SYSTEM ──────────────────────────────────────────────────────────────────
+
+model SystemUser {
+  id           Int      @id @default(autoincrement())
+  username     String   @unique
+  password     String
+  full_name_bn String?
+  full_name_en String
+  role         UserRole @default(ADMIN)
+  is_active    Boolean  @default(true)
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  audit_logs          AuditLog[]
+  upload_logs         UploadLog[]
+  mp_desg_changes     MpDesignationLog[]
+  staff_desg_changes  StaffDesignationLog[]
+  tenures_created     ParliamentTenure[]
+  allocations_created Allocation[]
+
+  @@map("system_users")
+}
+
+model AuditLog {
+  id           Int         @id @default(autoincrement())
+  table_name   String
+  record_id    String
+  action       AuditAction
+  old_value    Json?
+  new_value    Json?
+  changed_by   Int
+  ip_address   String?
+  changed_at   DateTime    @default(now())
+
+  user SystemUser @relation(fields: [changed_by], references: [id])
+
+  @@map("audit_logs")
+}
+
+// ─── LOOKUP TABLES ───────────────────────────────────────────────────────────
+
+model MpFlatCategory {
+  id      Int    @id @default(autoincrement())
+  name_bn String
+  name_en String
+  sort_order Int @default(0)
+
+  mp_flats MpFlat[]
+
+  @@map("mp_flat_categories")
+}
+
+model StaffQuarterCategory {
+  id      Int    @id @default(autoincrement())
+  name_bn String
+  name_en String
+  sort_order Int @default(0)
+
+  staff_quarters StaffQuarter[]
+
+  @@map("staff_quarter_categories")
+}
+
+model PoliticalParty {
+  id      Int    @id @default(autoincrement())
+  name_bn String
+  name_en String
+
+  mps Mp[]
+
+  @@map("political_parties")
+}
+
+model Department {
+  id      Int    @id @default(autoincrement())
+  name_bn String
+  name_en String
+
+  staff Staff[]
+
+  @@map("departments")
+}
+
+model MpDesignation {
+  id      Int    @id @default(autoincrement())
+  name_bn String
+  name_en String
+  sort_order Int @default(0)
+
+  mps                  Mp[]
+  designation_logs_old MpDesignationLog[] @relation("OldDesignation")
+  designation_logs_new MpDesignationLog[] @relation("NewDesignation")
+
+  @@map("mp_designations")
+}
+
+model StaffDesignationType {
+  id         Int     @id @default(autoincrement())
+  name_en    String  @unique
+  name_bn    String?
+  sort_order Int     @default(0)
+
+  @@map("staff_designation_types")
+}
+
+model MpOfficeBuilding {
+  id       Int    @id @default(autoincrement())
+  name_bn  String
+  name_en  String
+  location String?
+
+  mp_offices MpOffice[]
+
+  @@map("mp_office_buildings")
+}
+
+model HouseholdRelationType {
+  id      Int    @id @default(autoincrement())
+  name_bn String
+  name_en String
+  sort_order Int @default(0)
+
+  household_members HouseholdMember[]
+
+  @@map("household_relation_types")
+}
+
+// ─── PARLIAMENT TENURE ───────────────────────────────────────────────────────
+
+model ParliamentTenure {
+  id         Int       @id @default(autoincrement())
+  name       String
+  start_date DateTime  @db.Date
+  end_date   DateTime? @db.Date
+  is_active  Boolean   @default(true)
+  created_by Int
+  created_at DateTime  @default(now())
+
+  creator SystemUser @relation(fields: [created_by], references: [id])
+  mps     Mp[]
+
+  @@map("parliament_tenures")
+}
+
+// ─── MP ──────────────────────────────────────────────────────────────────────
+
+model Mp {
+  id                 Int       @id @default(autoincrement())
+  parliament_number  String    @unique
+  name_bn            String
+  name_en            String
+  constituency       String
+  party_id           Int?
+  gender             Gender
+  photo_path         String?
+  internal_user_id   String    @unique
+  designation_id     Int?
+  designation_since  DateTime? @db.Date
+  status             MpStatus  @default(ACTIVE)
+  tenure_id          Int
+  created_at         DateTime  @default(now())
+  updated_at         DateTime  @updatedAt
+
+  tenure          ParliamentTenure    @relation(fields: [tenure_id], references: [id])
+  party           PoliticalParty?     @relation(fields: [party_id], references: [id])
+  designation     MpDesignation?      @relation(fields: [designation_id], references: [id])
+  designation_logs MpDesignationLog[]
+  allocations     Allocation[]
+
+  @@map("mps")
+}
+
+model MpDesignationLog {
+  id                  Int      @id @default(autoincrement())
+  mp_id               Int
+  old_designation_id  Int?
+  new_designation_id  Int?
+  effective_date      DateTime @db.Date
+  changed_by          Int
+  changed_at          DateTime @default(now())
+
+  mp              Mp             @relation(fields: [mp_id], references: [id])
+  old_designation MpDesignation? @relation("OldDesignation", fields: [old_designation_id], references: [id])
+  new_designation MpDesignation? @relation("NewDesignation", fields: [new_designation_id], references: [id])
+  changed_by_user SystemUser     @relation(fields: [changed_by], references: [id])
+
+  @@map("mp_designation_logs")
+}
+
+// ─── STAFF ───────────────────────────────────────────────────────────────────
+
+model Staff {
+  id               Int           @id @default(autoincrement())
+  internal_user_id String        @unique
+  name_bn          String
+  name_en          String
+  mobile           String?
+  employee_class   EmployeeClass
+  grade            Int
+  designation      String
+  department_id    Int?
+  gender           Gender
+  marital_status   MaritalStatus?
+  photo_path       String?
+  service_status   StaffStatus   @default(ACTIVE)
+  created_at       DateTime      @default(now())
+  updated_at       DateTime      @updatedAt
+
+  department        Department?           @relation(fields: [department_id], references: [id])
+  designation_logs  StaffDesignationLog[]
+  allocations       Allocation[]
+  household_members HouseholdMember[]     @relation("StaffHousehold")
+
+  @@map("staff")
+}
+
+model StaffDesignationLog {
+  id               Int      @id @default(autoincrement())
+  staff_id         Int
+  old_designation  String?
+  new_designation  String
+  effective_date   DateTime @db.Date
+  changed_by       Int
+  changed_at       DateTime @default(now())
+
+  staff           Staff      @relation(fields: [staff_id], references: [id])
+  changed_by_user SystemUser @relation(fields: [changed_by], references: [id])
+
+  @@map("staff_designation_logs")
+}
+
+// ─── ASSETS ──────────────────────────────────────────────────────────────────
+
+model MpOffice {
+  id              Int         @id @default(autoincrement())
+  building_id     Int
+  floor           String?
+  room_number     String
+  phone_intercom  String?
+  status          AssetStatus @default(VACANT)
+  created_at      DateTime    @default(now())
+  updated_at      DateTime    @updatedAt
+
+  building    MpOfficeBuilding @relation(fields: [building_id], references: [id])
+  allocations Allocation[]
+
+  @@map("mp_offices")
+}
+
+model MpFlat {
+  id            Int         @id @default(autoincrement())
+  category_id   Int
+  location_name String
+  building_name String
+  flat_number   String
+  floor         String?
+  area_sqft     Decimal?    @db.Decimal(10, 2)
+  status        AssetStatus @default(VACANT)
+  created_at    DateTime    @default(now())
+  updated_at    DateTime    @updatedAt
+
+  category    MpFlatCategory @relation(fields: [category_id], references: [id])
+  allocations Allocation[]
+
+  @@unique([building_name, flat_number])
+  @@map("mp_flats")
+}
+
+model StaffQuarter {
+  id               Int         @id @default(autoincrement())
+  category_id      Int
+  quarter_number   String
+  location         String
+  building_name    String?
+  floor            String?
+  house_flat_number String?
+  area_sqft        Decimal?    @db.Decimal(10, 2)
+  full_address     String
+  status           AssetStatus @default(VACANT)
+  created_at       DateTime    @default(now())
+  updated_at       DateTime    @updatedAt
+
+  category    StaffQuarterCategory @relation(fields: [category_id], references: [id])
+  allocations Allocation[]
+
+  @@unique([category_id, quarter_number])
+  @@map("staff_quarters")
+}
+
+// ─── ALLOCATION ───────────────────────────────────────────────────────────────
+// Polymorphic: asset_id points to mp_offices, mp_flats, or staff_quarters
+// depending on allocation_type. Partial unique index enforced via raw SQL
+// migration: UNIQUE (asset_id, allocation_type) WHERE status = 'ACTIVE'
+
+model Allocation {
+  id              Int              @id @default(autoincrement())
+  allocation_type AllocationType
+  // asset FK columns — only one non-null per row, determined by allocation_type
+  mp_office_id    Int?
+  mp_flat_id      Int?
+  quarter_id      Int?
+  // occupant FK columns — only one non-null per row, determined by occupant_type
+  occupant_type   OccupantType
+  mp_id           Int?
+  staff_id        Int?
+  allotment_date  DateTime         @db.Date
+  vacated_date    DateTime?        @db.Date
+  remarks         String?
+  status          AllocationStatus @default(ACTIVE)
+  created_by      Int
+  created_at      DateTime         @default(now())
+  updated_at      DateTime         @updatedAt
+
+  mp_office     MpOffice?     @relation(fields: [mp_office_id], references: [id])
+  mp_flat       MpFlat?       @relation(fields: [mp_flat_id], references: [id])
+  staff_quarter StaffQuarter? @relation(fields: [quarter_id], references: [id])
+  mp            Mp?           @relation(fields: [mp_id], references: [id])
+  staff         Staff?        @relation(fields: [staff_id], references: [id])
+
+  created_by_user   SystemUser        @relation(fields: [created_by], references: [id])
+  household_members HouseholdMember[]
+
+  @@map("allocations")
+}
+
+// ─── HOUSEHOLD MEMBERS ────────────────────────────────────────────────────────
+
+model HouseholdMember {
+  id               Int      @id @default(autoincrement())
+  staff_id         Int
+  allocation_id    Int
+  name_bn          String
+  name_en          String
+  relation_type_id Int
+  date_of_birth    DateTime? @db.Date
+  identity_number  String?
+  photo_path       String?
+  is_active        Boolean  @default(true)
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+
+  staff         Staff                 @relation("StaffHousehold", fields: [staff_id], references: [id])
+  allocation    Allocation            @relation(fields: [allocation_id], references: [id])
+  relation_type HouseholdRelationType @relation(fields: [relation_type_id], references: [id])
+
+  @@map("household_members")
+}
+
+// ─── UPLOAD TRACKING ──────────────────────────────────────────────────────────
+
+model UploadLog {
+  id            Int      @id @default(autoincrement())
+  upload_type   String   // "MP" | "STAFF"
+  original_filename String
+  total_rows    Int
+  success_rows  Int
+  error_rows    Int
+  uploaded_by   Int
+  uploaded_at   DateTime @default(now())
+
+  uploaded_by_user SystemUser       @relation(fields: [uploaded_by], references: [id])
+  rows             UploadLogRow[]
+
+  @@map("upload_logs")
+}
+
+model UploadLogRow {
+  id          Int    @id @default(autoincrement())
+  upload_id   Int
+  row_number  Int
+  status      String // "success" | "error"
+  message     String?
+  row_data    Json?
+
+  upload UploadLog @relation(fields: [upload_id], references: [id])
+
+  @@map("upload_log_rows")
+}

@@ -2,6 +2,7 @@ import { Module } from "@nestjs/common";
 import { APP_INTERCEPTOR } from "@nestjs/core";
 import { ConfigModule } from "@nestjs/config";
 import { PrismaModule } from "./prisma/prisma.module";
+import { DatabaseSeederService } from "./database-seeder.service";
 import { AuthModule } from "./auth/auth.module";
 import { UsersModule } from "./users/users.module";
 import { LookupsModule } from "./lookups/lookups.module";
@@ -43,6 +44,7 @@ import { BackupModule } from "./backup/backup.module";
   ],
   providers: [
     { provide: APP_INTERCEPTOR, useClass: AuditInterceptor },
+    DatabaseSeederService,
   ],
 })
 export class AppModule {}

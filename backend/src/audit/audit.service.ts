@@ -1,13 +1,12 @@
 import { Injectable } from "@nestjs/common";
-import { Prisma } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
 
 export interface AuditEntry {
   table_name: string;
   record_id:  string;
   action:     "INSERT" | "UPDATE" | "DELETE";
-  old_value?: Prisma.InputJsonValue | Prisma.NullableJsonNullValueInput;
-  new_value?: Prisma.InputJsonValue | Prisma.NullableJsonNullValueInput;
+  old_value?: unknown;
+  new_value?: unknown;
   changed_by: number;
   ip_address?: string;
 }
@@ -18,7 +17,7 @@ export class AuditService {
 
   /** Fire-and-forget: errors are swallowed so audit never breaks a real request */
   log(entry: AuditEntry): void {
-    this.prisma.auditLog.create({ data: entry }).catch(() => { /* silent */ });
+    this.prisma.auditLog.create({ data: entry as any }).catch(() => { /* silent */ });
   }
 
   async findAll(query: {

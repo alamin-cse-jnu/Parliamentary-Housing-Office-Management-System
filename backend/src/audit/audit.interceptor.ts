@@ -2,7 +2,6 @@ import {
   Injectable, NestInterceptor, ExecutionContext, CallHandler,
 } from "@nestjs/common";
 import { Observable, tap } from "rxjs";
-import { Prisma } from "@prisma/client";
 import { AuditService } from "./audit.service";
 
 const MUTATING = new Set(["POST", "PATCH", "PUT", "DELETE"]);
@@ -70,10 +69,10 @@ export class AuditInterceptor implements NestInterceptor {
 
     return next.handle().pipe(
       tap((responseBody) => {
-        const newVal: Prisma.InputJsonValue | Prisma.NullableJsonNullValueInput =
-          action === "DELETE" ? Prisma.JsonNull : (responseBody ?? Prisma.JsonNull);
-        const oldVal: Prisma.InputJsonValue | Prisma.NullableJsonNullValueInput =
-          action === "INSERT" ? Prisma.JsonNull : (requestBody ?? Prisma.JsonNull);
+        const newVal: unknown =
+          action === "DELETE" ? null : (responseBody ?? null);
+        const oldVal: unknown =
+          action === "INSERT" ? null : (requestBody ?? null);
 
         this.auditService.log({
           table_name: table,

@@ -83,10 +83,14 @@ export function AppLayout() {
         width={220}
         style={{ background: "#1a4b8c" }}
       >
-        <div style={{
-          height: 64, display: "flex", alignItems: "center", justifyContent: "center",
-          background: "#163d73", padding: "0 12px", overflow: "hidden", gap: 8,
-        }}>
+        <div
+          onClick={() => navigate("/")}
+          style={{
+            height: 64, display: "flex", alignItems: "center", justifyContent: "center",
+            background: "#163d73", padding: "0 12px", overflow: "hidden", gap: 8,
+            cursor: "pointer",
+          }}
+        >
           <img src={logo} alt="Parliament" style={{ width: 36, height: 36, objectFit: "contain", flexShrink: 0 }} />
           {!collapsed && (
             <Text style={{ color: "#fff", fontSize: 11, lineHeight: 1.3 }}>

@@ -377,10 +377,19 @@ History preserved via:
 > **UPDATE THIS SECTION before ending every session**
 
 ```
-Last Updated     : 11 May, 2026
-Last Worked On   : Bilingual fixes — Parliament Tenure Bangla name, bilingual party/department upload pipeline
+Last Updated     : 04 Jun, 2026
+Last Worked On   : Dashboard upgrade — real aggregated data + interactive Recharts charts
 
 File Last Edited :
+  backend/src/dashboard/dashboard.service.ts                ← New: aggregate stats with Prisma groupBy
+  backend/src/dashboard/dashboard.controller.ts             ← New: GET /api/dashboard/stats
+  backend/src/dashboard/dashboard.module.ts                 ← New: DashboardModule
+  backend/src/app.module.ts                                 ← Registered DashboardModule
+  frontend/src/pages/DashboardPage.tsx                      ← Full rewrite: stat cards + 6 Recharts charts + recent allocations table
+  frontend/src/i18n/en.json                                 ← Added 22 new dashboard i18n keys
+  frontend/src/i18n/bn.json                                 ← Added 22 new dashboard i18n keys (Bangla)
+  frontend/package.json                                     ← Added recharts ^2.15.3
+  frontend/Dockerfile                                       ← Changed npm ci → npm install (needed for recharts)
   backend/prisma/schema.prisma                              ← Added name_bn to ParliamentTenure
   backend/prisma/migrations/20260510181345_add_tenure_name_bn/ ← New migration for tenure name_bn
   backend/src/tenure/dto/tenure.dto.ts                      ← Added name_bn to Create/UpdateTenureDto

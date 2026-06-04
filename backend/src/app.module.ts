@@ -20,6 +20,7 @@ import { AuditModule } from "./audit/audit.module";
 import { AuditInterceptor } from "./audit/audit.interceptor";
 import { UploadModule } from "./upload/upload.module";
 import { BackupModule } from "./backup/backup.module";
+import { DashboardModule } from "./dashboard/dashboard.module";
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { BackupModule } from "./backup/backup.module";
     ReportsModule,
     UploadModule,
     BackupModule,
+    DashboardModule,
   ],
   providers: [
     { provide: APP_INTERCEPTOR, useClass: AuditInterceptor },

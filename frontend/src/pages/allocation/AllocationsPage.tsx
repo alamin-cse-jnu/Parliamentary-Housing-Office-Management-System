@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, type ReactNode } from "react";
 import {
   Card, Table, Select, Button, Tag, Typography, Space, Row, Col,
   Modal, Form, DatePicker, Input, message, Popconfirm, Drawer,
-  Divider, Avatar, Upload,
+  Divider, Avatar, Upload, Alert,
 } from "antd";
 import {
   ReloadOutlined, PlusOutlined, StopOutlined, TeamOutlined,
@@ -105,6 +105,8 @@ export function AllocationsPage() {
   const [loadingAssets, setLoadingAssets] = useState(false);
   const [mps, setMps]                 = useState<Mp[]>([]);
   const [staffList, setStaffList]     = useState<Staff[]>([]);
+  const [occupantActiveAllocs, setOccupantActiveAllocs] = useState<Allocation[]>([]);
+  const [checkingOccupant, setCheckingOccupant]         = useState(false);
 
   // Vacate modal
   const [vacateOpen, setVacateOpen]     = useState(false);
@@ -150,10 +152,28 @@ export function AllocationsPage() {
 
   // ─── Allocation create ────────────────────────────────────────────────────
 
+  async function onOccupantChange(occupantId: number | undefined) {
+    setOccupantActiveAllocs([]);
+    if (!occupantId || !allocType) return;
+    setCheckingOccupant(true);
+    try {
+      const endpoint = allocType === "STAFF_QUARTER"
+        ? `/allocations/staff/${occupantId}`
+        : `/allocations/mp/${occupantId}`;
+      const res = await api.get<Allocation[]>(endpoint);
+      setOccupantActiveAllocs(res.data);
+    } catch {
+      // silently ignore — backend will catch it on submit
+    } finally {
+      setCheckingOccupant(false);
+    }
+  }
+
   async function onAllocTypeChange(type: string) {
     setAllocType(type);
     form.setFieldsValue({ asset_id: undefined, occupant_id: undefined });
     setAssets([]);
+    setOccupantActiveAllocs([]);
     if (!type) return;
     setLoadingAssets(true);
     try {
@@ -179,6 +199,7 @@ export function AllocationsPage() {
   function openCreate() {
     setAllocType("");
     setAssets([]);
+    setOccupantActiveAllocs([]);
     form.resetFields();
     setCreateOpen(true);
   }
@@ -490,6 +511,8 @@ export function AllocationsPage() {
               showSearch
               optionFilterProp="children"
               disabled={!allocType}
+              loading={checkingOccupant}
+              onChange={(v) => onOccupantChange(v as number | undefined)}
             >
               {newAllocOccupantType === "STAFF"
                 ? staffList.map((s) => (
@@ -505,6 +528,29 @@ export function AllocationsPage() {
               }
             </Select>
           </Form.Item>
+
+          {(() => {
+            const conflict = occupantActiveAllocs.find((a) => a.allocation_type === allocType);
+            if (!conflict) return null;
+            const who = newAllocOccupantType === "STAFF" ? "staff member" : "MP";
+            const existing = assetLabel(conflict);
+            return (
+              <Alert
+                type="warning"
+                showIcon
+                style={{ marginBottom: 16 }}
+                message="Duplicate Allocation"
+                description={
+                  <>
+                    This {who} already has an active <strong>{ALLOC_TYPE_LABEL[allocType]}</strong> allocation:{" "}
+                    <strong>{existing}</strong>.
+                    <br />
+                    Vacate the existing allocation before assigning a new one.
+                  </>
+                }
+              />
+            );
+          })()}
 
           <Form.Item name="allotment_date" label="Allotment Date (Received Date)" rules={[{ required: true }]}>
             <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" />

@@ -63,6 +63,23 @@ export class AllocationService {
       const occupant = await (tx as any)[occupantModel].findUnique({ where: { id: dto.occupant_id } });
       if (!occupant) throw new NotFoundException(`Occupant #${dto.occupant_id} not found`);
 
+      // 2b. Enforce one active allocation per occupant per asset type
+      const existing = await tx.allocation.findFirst({
+        where: {
+          allocation_type: dto.allocation_type as any,
+          status:          "ACTIVE",
+          ...(dto.occupant_type === "MP"
+            ? { mp_id: dto.occupant_id }
+            : { staff_id: dto.occupant_id }),
+        },
+      });
+      if (existing) {
+        const who = dto.occupant_type === "MP" ? "MP" : "Staff member";
+        throw new ConflictException(
+          `${who} already has an active ${dto.allocation_type} allocation (ID #${existing.id}). Vacate the existing allocation before creating a new one.`,
+        );
+      }
+
       // 3. Create allocation record
       let allocation;
       try {

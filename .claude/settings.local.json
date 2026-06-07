@@ -55,7 +55,12 @@
       "Bash(git push *)",
       "PowerShell(Get-ChildItem *)",
       "PowerShell(docker compose *)",
-      "PowerShell(docker exec parliament_backend *)"
+      "PowerShell(docker exec parliament_backend *)",
+      "PowerShell(Test-NetConnection *)",
+      "Bash(apt-get install *)",
+      "PowerShell(docker run *)",
+      "PowerShell(docker run --rm alpine sh -c $cmd 2>&1)",
+      "Bash(docker-compose up *)"
     ]
   }
 }
